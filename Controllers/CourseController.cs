@@ -7,6 +7,7 @@ using ELProject.Shared.DTOs.Courses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -23,6 +24,39 @@ namespace ELProject.Controllers
         {
             _unitOfWork = unitOfWork;
             fileService = _fileService;
+        }
+
+        [Authorize(Roles ="Student")]
+        [HttpPost("enroll")]
+        public async Task<IActionResult> EnrollStudent(int courseId)
+        {
+            var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var order = new Order
+            {
+                StudentId = studentId,
+                CourseId = courseId,
+                Amount = 1000
+            };
+
+            await _unitOfWork.Orders.AddAsync(order);
+            await _unitOfWork.CompleteAsync();
+
+            var enrollment = new Enrollment
+            {
+                StudentId = studentId,
+                CourseId = courseId,
+                EnrollDate = DateTime.UtcNow,
+                OrderId = order.Id
+            };
+
+            await _unitOfWork.Enrollments.AddAsync(enrollment);
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new
+            {
+                Message = "Student enrolled successfully"
+            });
         }
 
         [Authorize(Roles = "Instructor")]

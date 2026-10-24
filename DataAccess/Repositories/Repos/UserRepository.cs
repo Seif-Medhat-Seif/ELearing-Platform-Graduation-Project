@@ -21,6 +21,7 @@ namespace ELProject.DataAccess.Repositories.Repos
                 .Where(e => e.StudentId == studentId)
                 .Select(e => new StudentCoursesDto
                 {
+                    CourseId = e.CourseId,
                     Title = e.Course.Title,
                     Thumbnail = e.Course.Thumbnail ?? string.Empty,
                     Category = e.Course.Category.Name,

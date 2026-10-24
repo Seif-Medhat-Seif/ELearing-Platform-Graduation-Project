@@ -16,18 +16,18 @@ namespace ELProject.Controllers
     [Authorize(Roles = "Instructor")] 
     public class InstructorController : ControllerBase
     {
-        private readonly InstructorRepository _repo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public InstructorController(InstructorRepository repo)
+        public InstructorController(IUnitOfWork unitOfWork)
         {
-            _repo = repo;
+            _unitOfWork = unitOfWork;
         }
 
         [AllowAnonymous]
         [HttpGet("instructors")]
         public async Task<IActionResult> GetAllInstructors()
         {
-            var instructors = await _repo.GetAllInstructorsAsync();
+            var instructors = await _unitOfWork.Instructors.GetAllInstructorsAsync();
 
             return Ok(instructors.Select(i => new
             {
@@ -45,7 +45,7 @@ namespace ELProject.Controllers
             var instructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (instructorId == null) return Unauthorized("User not authenticated");
 
-            var statistics = await _repo.GetInstructorStatisticsAsync(instructorId);
+            var statistics = await _unitOfWork.Instructors.GetInstructorStatisticsAsync(instructorId);
             return Ok(statistics);
         }
 
@@ -55,7 +55,7 @@ namespace ELProject.Controllers
             var instructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (instructorId == null) return Unauthorized("User not authenticated");
 
-            var courses = await _repo.GetInstructorCoursesAsync(instructorId);
+            var courses = await _unitOfWork.Instructors.GetInstructorCoursesAsync(instructorId);
             return Ok(courses);
         }
 
@@ -65,7 +65,7 @@ namespace ELProject.Controllers
             var instructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (instructorId == null) return Unauthorized("User not authenticated");
 
-            var activities = await _repo.GetRecentActivityAsync(instructorId, count);
+            var activities = await _unitOfWork.Instructors.GetRecentActivityAsync(instructorId, count);
             return Ok(activities);
         }
 
@@ -73,7 +73,7 @@ namespace ELProject.Controllers
         [HttpGet("{instructorId}/profile")]
         public async Task<IActionResult> GetInstructorProfile(string instructorId)
         {
-            var dto = await _repo.GetInstructorProfileAsync(instructorId);
+            var dto = await _unitOfWork.Instructors.GetInstructorProfileAsync(instructorId);
             return Ok(dto);
         }
 
@@ -83,7 +83,7 @@ namespace ELProject.Controllers
             var instructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (instructorId == null) return Unauthorized("User not authenticated");
 
-            var result = await _repo.EditInstructorProfileAsync(instructorId, dto);
+            var result = await _unitOfWork.Instructors.EditInstructorProfileAsync(instructorId, dto);
             if (!result)
                 return Unauthorized("Instructor does not have permission to edit this profile.");
             return CreatedAtAction(nameof(GetInstructorProfile), new { instructorId }, dto);

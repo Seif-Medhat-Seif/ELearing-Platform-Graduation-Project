@@ -1,5 +1,7 @@
 ﻿using ELProject.DataAccess.Repositories.Interfaces;
 using ELProject.Domain.Models;
+using ELProject.ExternalServices;
+using ELProject.Shared.DTOs.Lessons;
 using Microsoft.EntityFrameworkCore;
 
 namespace ELProject.DataAccess.Repositories.Repos
@@ -7,10 +9,12 @@ namespace ELProject.DataAccess.Repositories.Repos
     public class LessonRepository : Repository<Lesson, int>, ILessonRepository
     {
         private readonly AppDbContext _context;
+        private readonly IFileStorageService _fileService;
 
-        public LessonRepository(AppDbContext context) : base(context)
+        public LessonRepository(AppDbContext context, IFileStorageService fileService) : base(context)
         {
             _context = context;
+            _fileService = fileService;
         }
 
         public async Task<IEnumerable<Lesson>> GetLessonsBySectionId(int sectionId)
@@ -39,5 +43,23 @@ namespace ELProject.DataAccess.Repositories.Repos
             .MaxAsync(l => (int?)l.Order); // return null if there aren't lessons in the section
         }
 
+        public async Task UpdateLesson(Lesson lesson, UpdateLessonDto dto)
+        {
+            if (dto.File != null)
+            {
+                if (!string.IsNullOrEmpty(lesson.FileUrl))
+                    await _fileService.DeleteFileAsync(lesson.FileUrl, lesson.Type);
+
+                var url = await _fileService.UploadFileAsync(dto.File, dto.Type);
+                lesson.FileUrl = url;
+                lesson.DurationInSeconds = dto.DurationInSeconds;
+            }
+
+            lesson.Title = dto.Title ?? lesson.Title;
+            lesson.Order = dto.Order == 0 ? lesson.Order : dto.Order;
+            lesson.Type = dto.Type;
+
+            _context.Lessons.Update(lesson);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using ELProject.DataAccess.Repositories.Interfaces;
 using ELProject.Domain.Enums;
 using ELProject.Domain.Models;
 using ELProject.ExternalServices;
@@ -16,7 +17,7 @@ using System.Text;
 
 namespace ELProject.DataAccess.Repositories.Repos
 {
-    public class AuthRepository
+    public class AuthRepository : IAuthRepository
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration _config;
@@ -136,7 +137,7 @@ namespace ELProject.DataAccess.Repositories.Repos
 
             if (user == null)
             {
-                authResult.Message = "Invalid token";
+                authResult.Message = "Invalid token"; 
                 return authResult;
             }
 
@@ -209,7 +210,7 @@ namespace ELProject.DataAccess.Repositories.Repos
         {
             var settings = new GoogleJsonWebSignature.ValidationSettings()
             {
-                Audience = new List<string> { _config["GoogleAuth:ClientId"]! }
+                Audience = new List<string> { _config["Authentication:Google:ClientId"]! }
             };
 
             GoogleJsonWebSignature.Payload payload;

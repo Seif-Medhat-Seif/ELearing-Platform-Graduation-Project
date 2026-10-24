@@ -2,6 +2,7 @@ namespace ELProject.Shared.DTOs.Student
 {
     public class StudentCoursesDto
     {
+        public int CourseId {get; set; }
         public required string Title {get; set;}
         public required string Category {get;set;}
         public required string Thumbnail {get;set;}

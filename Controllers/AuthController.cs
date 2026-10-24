@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using ELProject.DataAccess.Repositories.Interfaces;
 using ELProject.DataAccess.Repositories.Repos;
 using ELProject.Domain.Models;
 using ELProject.Shared;
@@ -13,17 +14,17 @@ namespace ELProject.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AuthRepository authRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthController(AuthRepository _authRepo)
+        public AuthController(IUnitOfWork unitOfWork)
         {
-            authRepo = _authRepo;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost("register")] // api/Auth/register
         public async Task<IActionResult> RegisterAsync(RegisterDto UserDto)
         {
-            var result = await authRepo.RegisterAsync(UserDto);
+            var result = await _unitOfWork.Auths.RegisterAsync(UserDto);
 
             if (!result.IsAuthenticated)
                 return Unauthorized(result.Message);
@@ -44,7 +45,7 @@ namespace ELProject.Controllers
         [HttpPost("login")] // api/Auth/login
         public async Task<IActionResult> LoginAsync(LoginDto userFromRequest)
         {
-            var authResult = await authRepo.LoginAsync(userFromRequest);
+            var authResult = await _unitOfWork.Auths.LoginAsync(userFromRequest);
 
             if (!authResult.IsAuthenticated)
                 return Unauthorized(authResult.Message);
@@ -71,7 +72,7 @@ namespace ELProject.Controllers
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized("No refresh token found");
 
-            var result = await authRepo.RefreshTokenAsync(refreshToken);
+            var result = await _unitOfWork.Auths.RefreshTokenAsync(refreshToken);
 
             if (!result.IsAuthenticated)
                 return Unauthorized(result.Message);
@@ -98,7 +99,7 @@ namespace ELProject.Controllers
             if (string.IsNullOrEmpty(token))
                 return Unauthorized("No token found");
 
-            var result = await authRepo.RevokeTokenAsync(token);
+            var result = await _unitOfWork.Auths.RevokeTokenAsync(token);
 
             if (!result)
                 return Unauthorized("Invalid or inactive token");
@@ -112,7 +113,7 @@ namespace ELProject.Controllers
         [HttpPost("external-login")]
         public async Task<IActionResult> ExternalLoginAsync(ExternalLoginDto model)
         {
-            var result = await authRepo.ExternalLoginAsync(model);
+            var result = await _unitOfWork.Auths.ExternalLoginAsync(model);
 
             if (!result.IsAuthenticated)
                 return Unauthorized(result.Message);
@@ -133,7 +134,7 @@ namespace ELProject.Controllers
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePasswordAsync(ChangePasswordDto dto)
         {
-            var result = await authRepo.ChangePasswordAsync(User, dto);
+            var result = await _unitOfWork.Auths.ChangePasswordAsync(User, dto);
 
             if (result.Message is not null)
                 return Unauthorized(result.Message);
@@ -146,8 +147,8 @@ namespace ELProject.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
+                Secure = true,  // secure = true only if we use HTTPS
+                SameSite = SameSiteMode.None,
                 Expires = refreshTokenExpiration
             };
 

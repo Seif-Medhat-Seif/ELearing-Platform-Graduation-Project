@@ -1,18 +1,15 @@
-﻿using ELProject.Shared.DTOs.Instructor;
+﻿using ELProject.Domain.Models;
+using ELProject.Shared.DTOs.Instructor;
 
 namespace ELProject.DataAccess.Repositories.Interfaces
 {
     public interface IInstructorRepository
     {
-        Task<InstructorProfileDto> GetInstructorProfileAsync(string instructorId);
+        Task<IList<ApplicationUser>> GetAllInstructorsAsync();
+        Task<InstructorStatisticsDto> GetInstructorStatisticsAsync(string instructorId);
         Task<IReadOnlyList<InstructorCourseDto>> GetInstructorCoursesAsync(string instructorId);
         Task<IReadOnlyList<RecentActivityDto>> GetRecentActivityAsync(string instructorId, int count = 4);
-        Task<InstructorStatisticsDto> GetInstructorStatisticsAsync(string instructorId);
-
-
-        // Optional: CRUD helpers for courses if you want repo to manage them
-        // Task<Course> CreateCourseAsync(Course course);
-        // Task UpdateCourseAsync(Course course);
-        // Task DeleteCourseAsync(int courseId);
+        Task<InstructorProfileDto> GetInstructorProfileAsync(string instructorId);
+        Task<bool> EditInstructorProfileAsync(string instructorId, EditInstructorProfileDto dto);
     }
 }

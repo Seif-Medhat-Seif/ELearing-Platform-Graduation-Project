@@ -23,8 +23,7 @@ namespace ELProject.DataAccess.Repositories.Repos
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            foreach (var item in items)
-            Console.WriteLine(item);
+
             return new PaginationResult<Course> { TotalCount = items.Count, Items = items };
         }
 

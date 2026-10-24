@@ -16,12 +16,12 @@ namespace ELProject.Controllers
     [ApiController]
     public class LessonController : ControllerBase
     {
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IFileStorageService fileService;
 
         public LessonController(IUnitOfWork unitOfWork, IFileStorageService _fileService)
         {
-            this.unitOfWork = unitOfWork;
+            _unitOfWork = unitOfWork;
             fileService = _fileService;
         }
 
@@ -32,7 +32,7 @@ namespace ELProject.Controllers
             var InstructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (InstructorId == null) return Unauthorized("User Not Authenticated");
 
-            var course = await unitOfWork.Courses.GetByIdAsync(courseId);
+            var course = await _unitOfWork.Courses.GetByIdAsync(courseId);
             if (course.UserId != InstructorId)
                 return Forbid();
 
@@ -41,7 +41,7 @@ namespace ELProject.Controllers
             if (string.IsNullOrEmpty(url))
                 return StatusCode(500, "An error occurred while uploading the file");
 
-            int order = await unitOfWork.Lessons.GetOrderOfLastLessonInSection(sectionId) ?? 0;
+            int order = await _unitOfWork.Lessons.GetOrderOfLastLessonInSection(sectionId) ?? 0;
 
             Lesson newLesson = new()
             {
@@ -57,8 +57,8 @@ namespace ELProject.Controllers
 
             try
             {
-                await unitOfWork.Lessons.AddAsync(newLesson);
-                await unitOfWork.CompleteAsync();
+                await _unitOfWork.Lessons.AddAsync(newLesson);
+                await _unitOfWork.CompleteAsync();
                 return Ok(new { lessonId = newLesson.Id });
             }
             catch
@@ -75,20 +75,20 @@ namespace ELProject.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized("User Not Authenticated");
 
-            var lesson = await unitOfWork.Lessons.GetByIdAsync(lessonId);
+            var lesson = await _unitOfWork.Lessons.GetByIdAsync(lessonId);
             if (lesson == null)
                 return NotFound("Lesson Not Found");
 
             if (User.IsInRole("Student"))
             {
-                var IsEnrolledStudent = await unitOfWork.Enrollments.IsFoundAsync(userId, courseId);
+                var IsEnrolledStudent = await _unitOfWork.Enrollments.IsFoundAsync(userId, courseId);
 
                 if (lesson.Order > 2 && !IsEnrolledStudent)
                     return Forbid();
             }
             else if (User.IsInRole("Instructor"))
             {
-                var course = await unitOfWork.Courses.GetByIdAsync(courseId);
+                var course = await _unitOfWork.Courses.GetByIdAsync(courseId);
                 if (course.UserId != userId)
                     return Forbid();
             }
@@ -142,7 +142,7 @@ namespace ELProject.Controllers
         [HttpGet("lessons-per-section/{sectionId}")]
         public async Task<IActionResult> GetLessonsPerSection(int sectionId)
         {
-            var lessons = await unitOfWork.Lessons.GetLessonsBySectionId(sectionId);
+            var lessons = await _unitOfWork.Lessons.GetLessonsBySectionId(sectionId);
 
             return Ok(lessons.Select(l => new
             {
@@ -164,27 +164,14 @@ namespace ELProject.Controllers
             var InstructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (InstructorId == null) return Unauthorized("User Not Authenticated");
 
-            var lesson = await unitOfWork.Lessons.GetLessonWithInstructorId(InstructorId, lessonId);
+            var lesson = await _unitOfWork.Lessons.GetLessonWithInstructorId(InstructorId, lessonId);
 
             if (lesson == null)
                 return NotFound("Lesson Not Found");
 
-            if (dto.File != null)
-            {
-                if (!string.IsNullOrEmpty(lesson.FileUrl))
-                    await fileService.DeleteFileAsync(lesson.FileUrl, lesson.Type);
+            await _unitOfWork.Lessons.UpdateLesson(lesson, dto);
 
-                var url = await fileService.UploadFileAsync(dto.File, dto.Type);
-                lesson.FileUrl = url;
-                lesson.DurationInSeconds = dto.DurationInSeconds;
-            }
-
-            lesson.Title = dto.Title ?? lesson.Title;
-            lesson.Order = dto.Order == 0 ? lesson.Order : dto.Order;
-            lesson.Type = dto.Type;
-
-            unitOfWork.Lessons.Update(lesson);
-            await unitOfWork.CompleteAsync();
+            await _unitOfWork.CompleteAsync();
             return Ok("Lesson Updated Successfully");
         }
 
@@ -196,7 +183,7 @@ namespace ELProject.Controllers
             var InstructorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (InstructorId == null) return Unauthorized("User Not Authenticated");
 
-            var lesson = await unitOfWork.Lessons.GetLessonWithInstructorId(InstructorId, id);//GetByIdAsync(id);
+            var lesson = await _unitOfWork.Lessons.GetLessonWithInstructorId(InstructorId, id);//GetByIdAsync(id);
 
             if (lesson == null)
                 return NotFound("Lesson Not Found");
@@ -204,8 +191,8 @@ namespace ELProject.Controllers
             if (!string.IsNullOrEmpty(lesson.FileUrl))
                 await fileService.DeleteFileAsync(lesson.FileUrl, lesson.Type);
 
-            unitOfWork.Lessons.Remove(lesson);
-            await unitOfWork.CompleteAsync();
+            _unitOfWork.Lessons.Remove(lesson);
+            await _unitOfWork.CompleteAsync();
             return Ok("Lesson Deleted Successfully");
         }
 
