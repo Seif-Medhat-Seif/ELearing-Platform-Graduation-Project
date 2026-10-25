@@ -1,3 +1,5 @@
+using ELProject.ExternalServices;
+
 namespace ELProject.DataAccess.Repositories.Interfaces
 {
     public interface IUnitOfWork : IDisposable
@@ -10,6 +12,7 @@ namespace ELProject.DataAccess.Repositories.Interfaces
         ICategoryRepository Categories { get; }
         IInstructorRepository Instructors { get; }
         ILessonRepository Lessons { get; }
+        IPaymobService PaymobServices { get; }
         IUserRepository Users { get; }
         ISectionRepository Sections { get; }
         IQuizRepository Quizzes { get; }

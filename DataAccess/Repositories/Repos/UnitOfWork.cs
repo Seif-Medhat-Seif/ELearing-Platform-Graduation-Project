@@ -1,5 +1,5 @@
-using ELProject.DataAccess;
 using ELProject.DataAccess.Repositories.Interfaces;
+using ELProject.ExternalServices;
 namespace ELProject.DataAccess.Repositories.Repos
 {
     public class UnitOfWork : IUnitOfWork
@@ -13,6 +13,7 @@ namespace ELProject.DataAccess.Repositories.Repos
         public ICourseRepository Courses { get; }
         public ICategoryRepository Categories { get; }
         public IInstructorRepository Instructors { get; }
+        public IPaymobService PaymobServices { get; }
         public IUserRepository Users { get; }
         public ILessonRepository Lessons { get; }
         public ISectionRepository Sections { get; }
@@ -27,6 +28,7 @@ namespace ELProject.DataAccess.Repositories.Repos
             ICourseRepository courses,
             ICategoryRepository categories,
             IInstructorRepository instructors,
+            IPaymobService paymobServices,
             IUserRepository users,
             ILessonRepository lessons,
             ISectionRepository sections,
@@ -41,6 +43,7 @@ namespace ELProject.DataAccess.Repositories.Repos
             Courses = courses;
             Categories = categories;
             Instructors = instructors;
+            PaymobServices = paymobServices;
             Users = users;
             Lessons = lessons;
             Sections = sections;

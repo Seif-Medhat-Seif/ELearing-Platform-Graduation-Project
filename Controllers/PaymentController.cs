@@ -1,12 +1,8 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using ELProject.DataAccess.Repositories.Interfaces;
 using ELProject.Domain.Models;
-using ELProject.ExternalServices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,18 +13,15 @@ namespace ELProject.Controllers
     [Authorize]
     public class PaymentController : ControllerBase
     {
-        private readonly PaymobService _paymobService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public PaymentController(
-            PaymobService paymobService,
             IUnitOfWork unitOfWork,
             IConfiguration configuration,
             UserManager<ApplicationUser> userManager)
         {
-            _paymobService = paymobService;
             _unitOfWork = unitOfWork;
             _configuration = configuration;
             _userManager = userManager;
@@ -70,7 +63,7 @@ namespace ELProject.Controllers
             await _unitOfWork.CompleteAsync();
 
             // 🔥 IMPORTANT: Paymob mapping uses PaymentReference
-            var clientSecret = await _paymobService.CreatePaymentIntentAsync(order, student);
+            var clientSecret = await _unitOfWork.PaymobServices.CreatePaymentIntentAsync(order, student);
 
             return Ok(new { client_secret = clientSecret });
         }
@@ -88,7 +81,7 @@ namespace ELProject.Controllers
                     return Ok();
 
                 var hmacSecret = _configuration["Paymob:HmacSecret"]!;
-                var calculatedHmac = await _paymobService.CalculateHmac(obj, hmacSecret);
+                var calculatedHmac = await _unitOfWork.PaymobServices.CalculateHmac(obj, hmacSecret);
 
                 if (!string.Equals(calculatedHmac, hmac, StringComparison.OrdinalIgnoreCase))
                     return Unauthorized();

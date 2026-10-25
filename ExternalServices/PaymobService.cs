@@ -5,7 +5,7 @@ using ELProject.Domain.Models;
 
 namespace ELProject.ExternalServices
 {
-    public class PaymobService : IPaymobGatewayService
+    public class PaymobService : IPaymobService
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
@@ -31,7 +31,7 @@ namespace ELProject.ExternalServices
                 {
                     first_name = student.UserName ?? "Student",
                     last_name = "User",
-                    email = (string.IsNullOrEmpty(student.Email) || !student.Email.Contains("@"))
+                    email = string.IsNullOrEmpty(student.Email) || !student.Email.Contains("@")
                         ? "dumyemail@example.com"
                         : student.Email,
                     phone_number = student.PhoneNumber ?? "+201010101010",

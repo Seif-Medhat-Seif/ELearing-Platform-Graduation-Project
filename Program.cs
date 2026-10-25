@@ -45,6 +45,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ISectionRepository, SectionRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+builder.Services.AddScoped<IPaymobService, PaymobService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
